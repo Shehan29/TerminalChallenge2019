@@ -252,6 +252,31 @@ class GameState:
         unit_def = self.config["unitInformation"][UNIT_TYPE_TO_INDEX[unit_type]]
         return unit_def.get('cost')
 
+    def can_place(self, unit_type, location, num=1, warnings=False):
+        if unit_type not in ALL_UNITS:
+            self._invalid_unit(unit_type)
+            return
+
+        affordable = self.number_affordable(unit_type) >= num
+        stationary = is_stationary(unit_type)
+        blocked = self.contains_stationary_unit(location) or (stationary and len(self.game_map[location[0],location[1]]) > 0)
+        correct_territory = location[1] < self.HALF_ARENA
+
+        if self.enable_warnings:
+            fail_reason = ""
+            if not affordable:
+                fail_reason = fail_reason + " Not enough resources."
+            if blocked:
+                fail_reason = fail_reason + " Location is blocked."
+            if not correct_territory:
+                fail_reason = fail_reason + " Location in enemy terretory."
+            if not (stationary or on_edge):
+                fail_reason = fail_reason + " Information units must be deployed on the edge."
+            self.warn("Could not spawn {} at location {}.{}".format(unit_type, location, fail_reason))
+
+        return (affordable and correct_territory and not blocked and
+                stationary and (not stationary or num == 1))
+
     def can_spawn(self, unit_type, location, num=1, warnings = False):
         """Check if we can spawn a unit at a location. 
 
