@@ -1,7 +1,6 @@
 from WallStrategy import WallStrategy
 from FunnelStrategy import FunnelStrategy
 import gamelib
-import utility
 
 """
 Most of the algo code you write will be in this file unless you create new

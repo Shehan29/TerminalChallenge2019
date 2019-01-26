@@ -37,6 +37,21 @@ class WallStrategy(gamelib.AlgoCore):
         self.right_deployment_locations = [[27-x,y] for x,y in self.left_deployment_locations]
         self.center_deployment_locations = [[x, 13] for x in range(28)]
 
+    def isHealthy(self, game_state):
+        totalSpaces = 0
+        count = 0
+        for i in range(0, 27):
+            if game_state.game_map.in_arena_bounds((i, self.wall_y)):
+                totalSpaces += 1
+        if game_state.contains_stationary_unit((i, self.wall_y)):
+            count += 1
+
+        if (count / totalSpaces) <= 0.2:
+            return False
+        else:
+            return True
+
+
     def on_game_start(self, config):
         """
         Read in config and perform any initial setup here
