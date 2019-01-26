@@ -55,7 +55,7 @@ class AlgoStrategy(gamelib.AlgoCore):
         game engine.
         """
         game_state = gamelib.AdvancedGameState(self.config, turn_state)
-        if game_state.turn_number % 3 == 0:
+        if game_state.turn_number % 5 == 0:
             if not self.algo_strategy.isHealthy(game_state):
                 self.algo_strategy = self.funnel_strategy if self.curr_strategy == 'wall' else self.wall_strategy
 

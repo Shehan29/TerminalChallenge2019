@@ -2,6 +2,7 @@ import gamelib
 import random
 from gamelib.util import debug_write
 import sys
+import utility
 
 """
 Most of the algo code you write will be in this file unless you create new
@@ -43,8 +44,8 @@ class WallStrategy(gamelib.AlgoCore):
         for i in range(0, 27):
             if game_state.game_map.in_arena_bounds((i, self.wall_y)):
                 totalSpaces += 1
-        if game_state.contains_stationary_unit((i, self.wall_y)):
-            count += 1
+            if game_state.contains_stationary_unit((i, self.wall_y)):
+                count += 1
 
         if (count / totalSpaces) <= 0.2:
             return False
@@ -88,6 +89,8 @@ class WallStrategy(gamelib.AlgoCore):
         Build the wall.
         """
         self.build_great_wall(game_state)
+
+        self.placeEncryptors(game_state)
 
         """
         Reinforce the defenses.
@@ -271,7 +274,14 @@ class WallStrategy(gamelib.AlgoCore):
                     min_damage = self.get_damage_on_path(game_state, path)
                     break
 
+
         bits = int(game_state.get_resource(game_state.BITS))
+        opponentWall = utility.detectWall()
+        if opponentWall != 0:
+            if game_state.can_spawn(EMP, (2, 11), 1):
+                game_state.attempt_spawn(EMP, (2, 11), 1)
+        bits -= 3
+
         ping_duplication = bits
         emp_duplication = bits//3
         # debug_write("-----------")
@@ -288,6 +298,11 @@ class WallStrategy(gamelib.AlgoCore):
             if game_state.can_spawn(PING, min_damage_deploy_location, ping_duplication):
                 game_state.attempt_spawn(PING, min_damage_deploy_location, ping_duplication)
 
+    def placeEncryptors(self, game_state):
+        if not game_state.contains_stationary_unit((6, 7)):
+            game_state.attempt_spawn(ENCRYPTOR, [6,7])
+        if not game_state.contains_stationary_unit((8, 5)):
+            game_state.attempt_spawn(ENCRYPTOR, [8,5])
 
 if __name__ == "__main__":
     algo = AlgoStrategy()
