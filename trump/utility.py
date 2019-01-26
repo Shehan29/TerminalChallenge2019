@@ -1,6 +1,8 @@
 def detectWall(game_state):
     min_enemy_wall_y = 14
-    minWallDensity = 7
+    minConsecutiveWall = 5
+    expectedDensity = 0.6
+
     for i in range(5):
         consecutiveCount = 0
         maxConsecutiveCount = 0
@@ -12,3 +14,9 @@ def detectWall(game_state):
             else:
                 maxConsecutiveCount = max(consecutiveCount, maxConsecutiveCount)
                 consecutiveCount = 0
+
+        if count > 18*expectedDensity or maxConsecutiveCount > minConsecutiveWall:
+            return min_enemy_wall_y + i
+
+    # zero indicates no wall found
+    return 0
