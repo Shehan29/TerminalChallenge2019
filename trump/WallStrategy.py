@@ -228,14 +228,20 @@ class WallStrategy(gamelib.AlgoCore):
             debug_write("-----------")
 
         for location in self.right_deployment_locations:
+            debug_write("-----------")
+            debug_write("(%d, %d)" % (location[0], location[1]))
             if game_state.can_place(PING, location):
+                debug_write("can_place")
                 path = game_state.find_path_to_edge(location, game_state.game_map.TOP_LEFT)
                 if len(path) > 5:
                     damage_on_path = self.get_damage_on_path(game_state, path)
                     if damage_on_path < min_damage:
+                        debug_write("new_damage")
+                        debug_write(damage_on_path)
                         min_damage = damage_on_path
                         min_damage_deploy_location = location
                         left_start = False
+            debug_write("-----------")
 
         if left_start:
             for location in self.left_deployment_locations:
