@@ -26,8 +26,14 @@ class ScatterStrategy(gamelib.AlgoCore):
         random.seed()
 
         self.destructor_locations = [(3,13), (10, 11), (17, 11), (24, 13)]
+        self.funnel_x1 = 10
+        self.funnel_x2 = 17
+
         self.destructor_support_locations = [(3,12), (4, 12), (23, 12), (24, 12)]
+
         self.primary_filter_locations = [(2, 13), (4, 13), (9, 11), (10, 12), (11, 11), (16, 11), (17, 12)]
+        self.filter_funnel_locations = [(5,12), (6,11)]
+
         self.wall_y = 12
         self.opening = 12
 
@@ -69,7 +75,7 @@ class ScatterStrategy(gamelib.AlgoCore):
         """
         Build the wall.
         """
-        self.build_great_wall(game_state)
+        self.build_scatter(game_state)
 
         """
         Reinforce the defenses.
@@ -81,7 +87,7 @@ class ScatterStrategy(gamelib.AlgoCore):
         """
         self.deploy_attackers(game_state)
 
-    def build_great_wall(self, game_state):
+    def build_scatter(self, game_state):
         for location in self.destructor_locations:
             if game_state.can_spawn(DESTRUCTOR, location):
                 game_state.attempt_spawn(DESTRUCTOR, location)
@@ -90,14 +96,18 @@ class ScatterStrategy(gamelib.AlgoCore):
             if game_state.can_spawn(FILTER, location):
                 game_state.attempt_spawn(FILTER, location)
 
-        gaps = []
-        for i in range(1,27):
-            if i != self.opening and not game_state.contains_stationary_unit((i, self.wall_y)):
-                gaps.append((i, self.wall_y))
-        random.shuffle(gaps)
-        for location in gaps:
-            if game_state.can_spawn(FILTER, location):
-                game_state.attempt_spawn(FILTER, location)
+        for location in self.destructor_support_locations:
+            if game_state.can_spawn(DESTRUCTOR, location):
+                game_state.attempt_spawn(DESTRUCTOR, location)
+
+        # gaps = []
+        # for i in range(1,27):
+        #     if i != self.opening and not game_state.contains_stationary_unit((i, self.wall_y)):
+        #         gaps.append((i, self.wall_y))
+        # random.shuffle(gaps)
+        # for location in gaps:
+        #     if game_state.can_spawn(FILTER, location):
+        #         game_state.attempt_spawn(FILTER, location)
 
     def reinforce_destructor(self, game_state, location):
         """

@@ -1,4 +1,5 @@
 from WallStrategy import WallStrategy
+from ScatterStrategy import ScatterStrategy
 import gamelib
 
 """
@@ -21,7 +22,8 @@ the actual current map state.
 class AlgoStrategy(gamelib.AlgoCore):
     def __init__(self):
         super().__init__()
-        self.algo_strategy = WallStrategy()
+        self.algo_strategy = ScatterStrategy()
+        # self.algo_strategy = WallStrategy()
 
     def on_game_start(self, config):
         """ 
