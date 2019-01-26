@@ -39,6 +39,21 @@ class WallStrategy(gamelib.AlgoCore):
         self.center_deployment_locations = [[x, 12] for x in range(1, 27)]
         self.center_deployment_starting_locations = self.left_deployment_locations + self.right_deployment_locations
 
+    def isHealthy(self, game_state):
+        totalSpaces = 0
+        count = 0
+        for i in range(0, 27):
+            if game_state.game_map.in_arena_bounds((i, self.wall_y)):
+                totalSpaces += 1
+        if game_state.contains_stationary_unit((i, self.wall_y)):
+            count += 1
+
+        if (count / totalSpaces) <= 0.2:
+            return False
+        else:
+            return True
+
+
     def on_game_start(self, config):
         """
         Read in config and perform any initial setup here
@@ -249,7 +264,7 @@ class WallStrategy(gamelib.AlgoCore):
                         min_damage = damage_on_path
                         min_damage_deploy_location = location
             debug_write("-----------")
-
+            
         for location in self.center_deployment_locations:
             debug_write("-----------")
             debug_write("(%d, %d)" % (location[0], location[1]))
@@ -261,6 +276,7 @@ class WallStrategy(gamelib.AlgoCore):
                     damage_on_path = self.get_damage_on_path(game_state, path)
                     if damage_on_path < min_damage:
                         debug_write("new_damage")
+                        debug_write(damage_on_path)
                         min_damage = damage_on_path
                         min_damage_deploy_location = location
                         left_start = False

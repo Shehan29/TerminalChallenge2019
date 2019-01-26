@@ -20,19 +20,39 @@ board states. Though, we recommended making a copy of the map to preserve
 the actual current map state.
 """
 
-class ScatterStrategy(gamelib.AlgoCore):
+class FunnelStrategy(gamelib.AlgoCore):
     def __init__(self):
         super().__init__()
         random.seed()
 
         self.destructor_locations = [(3,13), (10, 11), (17, 11), (24, 13)]
+        self.funnel_y = 10
+        self.funnel_x1 = 10
+        self.funnel_x2 = 17
+
         self.destructor_support_locations = [(3,12), (4, 12), (23, 12), (24, 12)]
+
         self.primary_filter_locations = [(2, 13), (4, 13), (9, 11), (10, 12), (11, 11), (16, 11), (17, 12)]
+        self.filter_funnel_locations = [(5,12),(6,11),(7,11),(8,11),(19,11),(20,11),(21,11),(22,12)]
+
         self.wall_y = 12
         self.opening = 12
 
         self.left_deployment_locations = [[x,13-x] for x in range(14)]
         self.right_deployment_locations = [[27-x,y] for x,y in self.left_deployment_locations]
+
+    def isHealthy(self, game_state):
+        dead_firewalls = 0
+        total_firewalls = len(self.destructor_support_locations) + len(self.destructor_locations)
+        for location in self.destructor_support_locations:
+            if not game_state.contains_stationary_unit(location):
+                dead_firewalls += 1
+        for location in self.destructor_locations:
+            if not game_state.contains_stationary_unit(location):
+                dead_firewalls += 1
+
+        return dead_firewalls/total_firewalls > 0.7
+
 
     def on_game_start(self, config):
         """
@@ -69,7 +89,7 @@ class ScatterStrategy(gamelib.AlgoCore):
         """
         Build the wall.
         """
-        self.build_great_wall(game_state)
+        self.build_scatter(game_state)
 
         """
         Reinforce the defenses.
@@ -81,23 +101,37 @@ class ScatterStrategy(gamelib.AlgoCore):
         """
         self.deploy_attackers(game_state)
 
-    def build_great_wall(self, game_state):
+    def build_scatter(self, game_state):
+        random.shuffle(self.destructor_locations)
         for location in self.destructor_locations:
             if game_state.can_spawn(DESTRUCTOR, location):
                 game_state.attempt_spawn(DESTRUCTOR, location)
 
+        random.shuffle(self.primary_filter_locations)
         for location in self.primary_filter_locations:
             if game_state.can_spawn(FILTER, location):
                 game_state.attempt_spawn(FILTER, location)
 
-        gaps = []
-        for i in range(1,27):
-            if i != self.opening and not game_state.contains_stationary_unit((i, self.wall_y)):
-                gaps.append((i, self.wall_y))
-        random.shuffle(gaps)
-        for location in gaps:
+        random.shuffle(self.destructor_support_locations)
+        for location in self.destructor_support_locations:
+            if game_state.can_spawn(DESTRUCTOR, location):
+                game_state.attempt_spawn(DESTRUCTOR, location)
+
+        random.shuffle(self.filter_funnel_locations)
+        for location in self.filter_funnel_locations:
             if game_state.can_spawn(FILTER, location):
                 game_state.attempt_spawn(FILTER, location)
+
+        for i in range(self.funnel_y,4,-1):
+            if game_state.get_resource(game_state.CORES) < 3:
+                return
+            location = (self.funnel_x1, i)
+            if game_state.can_spawn(DESTRUCTOR, location):
+                game_state.attempt_spawn(DESTRUCTOR, location)
+            location = (self.funnel_x2, i)
+            if game_state.can_spawn(DESTRUCTOR, location):
+                game_state.attempt_spawn(DESTRUCTOR, location)
+
 
     def reinforce_destructor(self, game_state, location):
         """
@@ -200,7 +234,3 @@ class ScatterStrategy(gamelib.AlgoCore):
         if game_state.can_spawn(SCRAMBLER, min_damage_deploy_location):
             game_state.attempt_spawn(SCRAMBLER, min_damage_deploy_location)
 
-
-if __name__ == "__main__":
-    algo = AlgoStrategy()
-    algo.start()

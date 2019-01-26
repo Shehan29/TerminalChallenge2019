@@ -1,3 +1,4 @@
+import gamelib
 def detectWall(game_state):
     min_enemy_wall_y = 14
     minConsecutiveWall = 5
@@ -14,9 +15,14 @@ def detectWall(game_state):
             else:
                 maxConsecutiveCount = max(consecutiveCount, maxConsecutiveCount)
                 consecutiveCount = 0
-
+        gamelib.debug_write("COUNT :")
+        gamelib.debug_write(count)
+        gamelib.debug_write("MAX CONSEC")
+        gamelib.debug_write(maxConsecutiveCount)
         if count > 18*expectedDensity or maxConsecutiveCount > minConsecutiveWall:
+            gamelib.debug_write("DEPLOYING EMP")
             return min_enemy_wall_y + i
 
     # zero indicates no wall found
     return 0
+
