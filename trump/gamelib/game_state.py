@@ -256,16 +256,22 @@ class GameState:
         if unit_type not in ALL_UNITS:
             self._invalid_unit(unit_type)
             return
+        # debug_write("unit_type in ALL_UNITS")
 
         if not self.game_map.in_arena_bounds(location):
             if self.enable_warnings:
                 self.warn("Could not spawn {} at location {}. Location invalid.".format(unit_type, location))
             return False
+        # debug_write("unit in arena bounds")
 
         affordable = self.number_affordable(unit_type) >= num
+        # debug_write("affordable is: {0}".format(affordable))
         stationary = is_stationary(unit_type)
-        blocked = self.contains_stationary_unit(location) or (stationary and len(self.game_map[location[0],location[1]]) > 0)
+        # debug_write("stationary is: {0}".format(stationary))
+        blocked = self.contains_stationary_unit(location)
+        # debug_write("blocked is: {0}".format(blocked))
         correct_territory = location[1] < self.HALF_ARENA
+        # debug_write("correct_territory is: {0}".format(correct_territory))
 
         if self.enable_warnings:
             fail_reason = ""
@@ -275,12 +281,10 @@ class GameState:
                 fail_reason = fail_reason + " Location is blocked."
             if not correct_territory:
                 fail_reason = fail_reason + " Location in enemy terretory."
-            if not (stationary or on_edge):
-                fail_reason = fail_reason + " Information units must be deployed on the edge."
             self.warn("Could not spawn {} at location {}.{}".format(unit_type, location, fail_reason))
 
         return (affordable and correct_territory and not blocked and
-                stationary and (not stationary or num == 1))
+                (not stationary or num == 1))
 
     def can_spawn(self, unit_type, location, num=1, warnings = False):
         """Check if we can spawn a unit at a location. 
@@ -442,4 +446,3 @@ class GameState:
 
         self.enable_warnings = not suppress
         self.game_map.enable_warnings = not suppress
-
