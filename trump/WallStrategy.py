@@ -2,7 +2,6 @@ import gamelib
 import random
 from gamelib.util import debug_write
 import sys
-import utility
 
 """
 Most of the algo code you write will be in this file unless you create new
@@ -37,23 +36,6 @@ class WallStrategy(gamelib.AlgoCore):
         self.left_deployment_locations = [[x,13-x] for x in range(14)]
         self.right_deployment_locations = [[27-x,y] for x,y in self.left_deployment_locations]
         self.center_deployment_locations = [[x, 13] for x in range(28)]
-
-    def isHealthy(self, game_state):
-        totalSpaces = 0
-        count = 0
-        for i in range(0, 27):
-            if game_state.game_map.in_arena_bounds((i, self.wall_y)):
-                totalSpaces += 1
-                if game_state.contains_stationary_unit((i, self.wall_y)):
-                    count += 1
-
-        if (count / totalSpaces) <= 0.2:
-            return False
-        else:
-            return True
-
-    def get_wall_y(self):
-        return self.wall_y
 
     def on_game_start(self, config):
         """
@@ -198,12 +180,6 @@ class WallStrategy(gamelib.AlgoCore):
                         min_damage_deploy_location = location
 
         bits = int(game_state.get_resource(game_state.BITS))
-        opponentWall = utility.detectWall(game_state)
-        if opponentWall != 0:
-            if game_state.can_spawn(EMP, (3,10), 1):
-                game_state.attempt_spawn(EMP, (3,10), 1)
-                bits -= 3
-
         ping_duplication = bits
         emp_duplication = bits//3
         # debug_write("-----------")
@@ -252,14 +228,20 @@ class WallStrategy(gamelib.AlgoCore):
             debug_write("-----------")
 
         for location in self.right_deployment_locations:
+            debug_write("-----------")
+            debug_write("(%d, %d)" % (location[0], location[1]))
             if game_state.can_place(PING, location):
+                debug_write("can_place")
                 path = game_state.find_path_to_edge(location, game_state.game_map.TOP_LEFT)
                 if len(path) > 5:
                     damage_on_path = self.get_damage_on_path(game_state, path)
                     if damage_on_path < min_damage:
+                        debug_write("new_damage")
+                        debug_write(damage_on_path)
                         min_damage = damage_on_path
                         min_damage_deploy_location = location
                         left_start = False
+            debug_write("-----------")
 
         if left_start:
             for location in self.left_deployment_locations:
@@ -275,11 +257,6 @@ class WallStrategy(gamelib.AlgoCore):
                     break
 
         bits = int(game_state.get_resource(game_state.BITS))
-        opponentWall = utility.detectWall()
-        if opponentWall != 0:
-            if game_state.can_spawn(EMP, (2,11), 1):
-                game_state.attempt_spawn(EMP, (2,11), 1)
-                bits -= 3
         ping_duplication = bits
         emp_duplication = bits//3
         # debug_write("-----------")
@@ -295,3 +272,8 @@ class WallStrategy(gamelib.AlgoCore):
         else:
             if game_state.can_spawn(PING, min_damage_deploy_location, ping_duplication):
                 game_state.attempt_spawn(PING, min_damage_deploy_location, ping_duplication)
+
+
+if __name__ == "__main__":
+    algo = AlgoStrategy()
+    algo.start()
