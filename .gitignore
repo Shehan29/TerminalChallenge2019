@@ -1,2 +1,4 @@
 replays/*
 .idea/*
+python-algo/gamelib/__pycache__/*
+trump/gamelib/__pycache__/*

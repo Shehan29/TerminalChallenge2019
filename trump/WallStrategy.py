@@ -35,7 +35,7 @@ class WallStrategy(gamelib.AlgoCore):
 
         self.left_deployment_locations = [[x,13-x] for x in range(14)]
         self.right_deployment_locations = [[27-x,y] for x,y in self.left_deployment_locations]
-        self.center_deployment_locations = [[x, 13]] for x in range(28)
+        self.center_deployment_locations = [[x, 13] for x in range(28)]
 
     def on_game_start(self, config):
         """
@@ -82,8 +82,8 @@ class WallStrategy(gamelib.AlgoCore):
         """
         Attack!
         """
-        # self.deploy_attackers(game_state)
-        self.deploy_attackers_from_middle(game_state)
+        self.deploy_attackers(game_state)
+        # self.deploy_attackers_from_middle(game_state)
 
     def build_great_wall(self, game_state):
         for location in self.destructor_locations:
@@ -211,6 +211,7 @@ class WallStrategy(gamelib.AlgoCore):
         min_damage_deploy_location = self.center_deployment_locations[0]
         left_start = True
         min_damage = sys.maxsize
+        path = []
 
         for location in self.center_deployment_locations:
             if game_state.can_place(PING, location):
