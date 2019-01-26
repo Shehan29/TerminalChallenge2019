@@ -26,13 +26,14 @@ class ScatterStrategy(gamelib.AlgoCore):
         random.seed()
 
         self.destructor_locations = [(3,13), (10, 11), (17, 11), (24, 13)]
+        self.funnel_y = 10
         self.funnel_x1 = 10
         self.funnel_x2 = 17
 
         self.destructor_support_locations = [(3,12), (4, 12), (23, 12), (24, 12)]
 
         self.primary_filter_locations = [(2, 13), (4, 13), (9, 11), (10, 12), (11, 11), (16, 11), (17, 12)]
-        self.filter_funnel_locations = [(5,12), (6,11)]
+        self.filter_funnel_locations = [(5,12),(6,11),(7,11),(8,11),(19,11),(20,11),(21,11),(22,12)]
 
         self.wall_y = 12
         self.opening = 12
@@ -88,26 +89,36 @@ class ScatterStrategy(gamelib.AlgoCore):
         self.deploy_attackers(game_state)
 
     def build_scatter(self, game_state):
+        random.shuffle(self.destructor_locations)
         for location in self.destructor_locations:
             if game_state.can_spawn(DESTRUCTOR, location):
                 game_state.attempt_spawn(DESTRUCTOR, location)
 
+        random.shuffle(self.primary_filter_locations)
         for location in self.primary_filter_locations:
             if game_state.can_spawn(FILTER, location):
                 game_state.attempt_spawn(FILTER, location)
 
+        random.shuffle(self.destructor_support_locations)
         for location in self.destructor_support_locations:
             if game_state.can_spawn(DESTRUCTOR, location):
                 game_state.attempt_spawn(DESTRUCTOR, location)
 
-        # gaps = []
-        # for i in range(1,27):
-        #     if i != self.opening and not game_state.contains_stationary_unit((i, self.wall_y)):
-        #         gaps.append((i, self.wall_y))
-        # random.shuffle(gaps)
-        # for location in gaps:
-        #     if game_state.can_spawn(FILTER, location):
-        #         game_state.attempt_spawn(FILTER, location)
+        random.shuffle(self.filter_funnel_locations)
+        for location in self.filter_funnel_locations:
+            if game_state.can_spawn(FILTER, location):
+                game_state.attempt_spawn(FILTER, location)
+
+        for i in range(self.funnel_y,4,-1):
+            if game_state.get_resource(game_state.CORES) < 3:
+                return
+            location = (self.funnel_x1, i)
+            if game_state.can_spawn(DESTRUCTOR, location):
+                game_state.attempt_spawn(DESTRUCTOR, location)
+            location = (self.funnel_x2, i)
+            if game_state.can_spawn(DESTRUCTOR, location):
+                game_state.attempt_spawn(DESTRUCTOR, location)
+
 
     def reinforce_destructor(self, game_state, location):
         """
