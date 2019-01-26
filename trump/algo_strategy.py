@@ -40,9 +40,6 @@ class AlgoStrategy(gamelib.AlgoCore):
         unit deployments, and transmitting your intended deployments to the
         game engine.
         """
-        # game_state = gamelib.AdvancedGameState(self.config, turn_state)
-        # if not utility.isWallHealthy(game_state, 12):
-        #     self.algo_strategy = ScatterStrategy()
         self.algo_strategy.on_turn(turn_state)
 
     def strategy(self, game_state):

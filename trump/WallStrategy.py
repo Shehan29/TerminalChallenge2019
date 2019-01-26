@@ -278,4 +278,3 @@ class WallStrategy(gamelib.AlgoCore):
         else:
             if game_state.can_spawn(PING, min_damage_deploy_location, ping_duplication):
                 game_state.attempt_spawn(PING, min_damage_deploy_location, ping_duplication)
-
