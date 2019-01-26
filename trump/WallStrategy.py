@@ -32,10 +32,11 @@ class WallStrategy(gamelib.AlgoCore):
         self.primary_filter_locations = [(2, 13), (3, 13), (10, 13), (17, 13), (24, 13), (25, 13)]
         self.wall_y = 12
         self.opening = 12
+        self.possible_openings = [4, 6, 9, 12, 15, 18, 21, 23]
 
-        self.left_deployment_locations = [[x,13-x] for x in range(14)]
+        self.left_deployment_locations = [[x,13-x] for x in range(8, 14)]
         self.right_deployment_locations = [[27-x,y] for x,y in self.left_deployment_locations]
-        self.center_deployment_locations = [[x, self.12] for x in range(1, 27)]
+        self.center_deployment_locations = [[x, 12] for x in range(1, 27)]
         self.center_deployment_starting_locations = self.left_deployment_locations + self.right_deployment_locations
 
     def on_game_start(self, config):
@@ -205,6 +206,25 @@ class WallStrategy(gamelib.AlgoCore):
         if game_state.can_spawn(SCRAMBLER, min_damage_deploy_location):
             game_state.attempt_spawn(SCRAMBLER, min_damage_deploy_location)
 
+        if game_state.turn_number % 4 == 0:
+            min_damage = sys.maxsize
+            future_opening = self.opening
+            for opening_candidate in self.possible_openings:
+                path = game_state.find_path_to_edge((opening_candidate, self.wall_y), game_state.game_map.TOP_RIGHT)
+                if path and len(path) > 5:
+                    damage_on_path = self.get_damage_on_path(game_state, path)
+                    if damage_on_path < min_damage:
+                        min_damage = damage_on_path
+                        future_opening = opening_candidate
+                path = game_state.find_path_to_edge((opening_candidate, self.wall_y), game_state.game_map.TOP_LEFT)
+                if path and len(path) > 5:
+                    damage_on_path = self.get_damage_on_path(game_state, path)
+                    if damage_on_path < min_damage:
+                        min_damage = damage_on_path
+                        future_opening = opening_candidate
+            game_state.attempt_remove((future_opening, self.wall_y))
+
+    # Don't think this works
     def deploy_attackers_from_middle(self, game_state):
         if game_state.get_resource(game_state.BITS) < 10:
             return
