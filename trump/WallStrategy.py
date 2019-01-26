@@ -44,7 +44,7 @@ class WallStrategy(gamelib.AlgoCore):
         for i in range(0, 27):
             if game_state.game_map.in_arena_bounds((i, self.wall_y)):
                 totalSpaces += 1
-                if game_state.contains_stationary_unit(i, self.wall_y):
+                if game_state.contains_stationary_unit((i, self.wall_y)):
                     count += 1
 
         if (count / totalSpaces) <= 0.2:

@@ -30,10 +30,21 @@ class AlgoStrategy(gamelib.AlgoCore):
         self.curr_strategy = 'wall'
 
     def on_game_start(self, config):
-        """ 
-        Read in config and perform any initial setup here 
         """
-        self.algo_strategy.on_game_start(config)
+        Read in config and perform any initial setup here
+        """
+        gamelib.debug_write('Configuring your custom algo strategy...')
+        self.config = config
+        global FILTER, ENCRYPTOR, DESTRUCTOR, PING, EMP, SCRAMBLER
+        FILTER = config["unitInformation"][0]["shorthand"]
+        ENCRYPTOR = config["unitInformation"][1]["shorthand"]
+        DESTRUCTOR = config["unitInformation"][2]["shorthand"]
+        PING = config["unitInformation"][3]["shorthand"]
+        EMP = config["unitInformation"][4]["shorthand"]
+        SCRAMBLER = config["unitInformation"][5]["shorthand"]
+
+        self.funnel_strategy.on_game_start(config)
+        self.wall_strategy.on_game_start(config)
 
 
     def on_turn(self, turn_state):
@@ -45,8 +56,9 @@ class AlgoStrategy(gamelib.AlgoCore):
         game engine.
         """
         game_state = gamelib.AdvancedGameState(self.config, turn_state)
-        if not self.algo_strategy.isHealthy(game_state):
-            self.algo_strategy = self.funnel_strategy if self.curr_strategy == 'wall' else self.wall_strategy
+        if game_state.turn_number % 3 == 0:
+            if not self.algo_strategy.isHealthy(game_state):
+                self.algo_strategy = self.funnel_strategy if self.curr_strategy == 'wall' else self.wall_strategy
 
         self.algo_strategy.on_turn(turn_state)
 
