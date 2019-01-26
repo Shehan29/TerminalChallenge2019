@@ -35,6 +35,7 @@ class WallStrategy(gamelib.AlgoCore):
 
         self.left_deployment_locations = [[x,13-x] for x in range(14)]
         self.right_deployment_locations = [[27-x,y] for x,y in self.left_deployment_locations]
+        self.center_deployment_locations = [[x, 13]] for x in range(28)
 
     def on_game_start(self, config):
         """
@@ -81,7 +82,8 @@ class WallStrategy(gamelib.AlgoCore):
         """
         Attack!
         """
-        self.deploy_attackers(game_state)
+        # self.deploy_attackers(game_state)
+        self.deploy_attackers_from_middle(game_state)
 
     def build_great_wall(self, game_state):
         for location in self.destructor_locations:
@@ -201,6 +203,62 @@ class WallStrategy(gamelib.AlgoCore):
         """
         if game_state.can_spawn(SCRAMBLER, min_damage_deploy_location):
             game_state.attempt_spawn(SCRAMBLER, min_damage_deploy_location)
+
+    def deploy_attackers_from_middle(self, game_state):
+        if game_state.get_resource(game_state.BITS) < 10:
+            return
+
+        min_damage_deploy_location = self.center_deployment_locations[0]
+        left_start = True
+        min_damage = sys.maxsize
+
+        for location in self.center_deployment_locations:
+            if game_state.can_place(PING, location):
+                path = game_state.find_path_to_edge(location, game_state.game_map.TOP_RIGHT)
+                damage_on_path = self.get_damage_on_path(game_state, path)
+                if damage_on_path < min_damage:
+                    min_damage = damage_on_path
+                    min_damage_deploy_location = location
+
+        for location in self.right_deployment_locations:
+            if game_state.can_place(PING, location):
+                path = game_state.find_path_to_edge(location, game_state.game_map.TOP_LEFT)
+                if len(path) > 5:
+                    damage_on_path = self.get_damage_on_path(game_state, path)
+                    if damage_on_path < min_damage:
+                        min_damage = damage_on_path
+                        min_damage_deploy_location = location
+                        left_start = False
+
+        if left_start:
+            for location in self.left_deployment_locations:
+                if game_state.can_spawn(PING, location):
+                    path = game_state.find_path_to_point(location, min_damage_deploy_location) + path
+                    min_damage = self.get_damage_on_path(game_state, path)
+                    break
+        else:
+            for location in self.right_deployment_locations:
+                if game_state.can_spawn(PING, location):
+                    path = game_state.find_path_to_point(location, min_damage_deploy_location) + path
+                    min_damage = self.get_damage_on_path(game_state, path)
+                    break
+
+        bits = int(game_state.get_resource(game_state.BITS))
+        ping_duplication = bits
+        emp_duplication = bits//3
+        # debug_write("-----------")
+        # debug_write(min_damage)
+        # debug_write(ping_duplication)
+        # debug_write("-----------")
+        if min_damage > (15*ping_duplication - 50):
+            # not worth sending pings (will get destroyed)
+            # send EMPs to hopefully clear
+            if game_state.can_spawn(EMP, (24,10), emp_duplication):
+                game_state.attempt_spawn(EMP, (24,10), emp_duplication)
+            return
+        else:
+            if game_state.can_spawn(PING, min_damage_deploy_location, ping_duplication):
+                game_state.attempt_spawn(PING, min_damage_deploy_location, ping_duplication)
 
 
 if __name__ == "__main__":

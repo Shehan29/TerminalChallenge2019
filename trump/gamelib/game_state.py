@@ -252,6 +252,31 @@ class GameState:
         unit_def = self.config["unitInformation"][UNIT_TYPE_TO_INDEX[unit_type]]
         return unit_def.get('cost')
 
+    def can_place(self, unit_type, location, num=1, warnings=False):
+        if unit_type not in ALL_UNITS:
+            self._invalid_unit(unit_type)
+            return
+
+        affordable = self.number_affordable(unit_type) >= num
+        stationary = is_stationary(unit_type)
+        blocked = self.contains_stationary_unit(location) or (stationary and len(self.game_map[location[0],location[1]]) > 0)
+        correct_territory = location[1] < self.HALF_ARENA
+
+        if self.enable_warnings:
+            fail_reason = ""
+            if not affordable:
+                fail_reason = fail_reason + " Not enough resources."
+            if blocked:
+                fail_reason = fail_reason + " Location is blocked."
+            if not correct_territory:
+                fail_reason = fail_reason + " Location in enemy terretory."
+            if not (stationary or on_edge):
+                fail_reason = fail_reason + " Information units must be deployed on the edge."
+            self.warn("Could not spawn {} at location {}.{}".format(unit_type, location, fail_reason))
+
+        return (affordable and correct_territory and not blocked and
+                stationary and (not stationary or num == 1))
+
     def can_spawn(self, unit_type, location, num=1, warnings = False):
         """Check if we can spawn a unit at a location. 
 
@@ -375,6 +400,12 @@ class GameState:
             return
         end_points = self.game_map.get_edge_locations(target_edge)
         return self._shortest_path_finder.navigate_multiple_endpoints(start_location, end_points, self)
+
+    def find_path_to_point(self, start_location, end_point):
+        if self.contains_stationary_unit(start_location):
+            self.warn("Attempted to perform pathing from blocked starting location {}".format(start_location))
+            return
+        return self._shortest_path_finder.navigate_multiple_endpoints(start_location, [end_point], self)
 
     def contains_stationary_unit(self, location):
         """Check if a location is blocked
