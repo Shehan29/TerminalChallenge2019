@@ -23,7 +23,11 @@ the actual current map state.
 class AlgoStrategy(gamelib.AlgoCore):
     def __init__(self):
         super().__init__()
-        self.algo_strategy = WallStrategy()
+        self.wall_strategy = WallStrategy()
+        self.funnel_strategy = FunnelStrategy()
+
+        self.algo_strategy = self.wall_strategy
+        self.curr_strategy = 'wall'
 
     def on_game_start(self, config):
         """ 
@@ -40,6 +44,10 @@ class AlgoStrategy(gamelib.AlgoCore):
         unit deployments, and transmitting your intended deployments to the
         game engine.
         """
+        game_state = gamelib.AdvancedGameState(self.config, turn_state)
+        if not self.algo_strategy.isHealthy(game_state):
+            self.algo_strategy = self.funnel_strategy if self.curr_strategy == 'wall' else self.wall_strategy
+
         self.algo_strategy.on_turn(turn_state)
 
     def strategy(self, game_state):

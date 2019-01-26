@@ -26,16 +26,3 @@ def detectWall(game_state):
     # zero indicates no wall found
     return 0
 
-def isWallHealthy(game_state, wallRow):
-    totalSpaces = 0
-    count = 0
-    for i in range (0, 27):
-        if game_state.game_map.in_arena_bounds((i, wallRow)):
-            totalSpaces += 1
-            if game_state.contains_stationary_unit(i, wallRow):
-                count += 1
-
-    if (count/totalSpaces) <= 0.2:
-        return False
-    else:
-        return True

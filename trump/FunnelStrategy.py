@@ -41,6 +41,19 @@ class FunnelStrategy(gamelib.AlgoCore):
         self.left_deployment_locations = [[x,13-x] for x in range(14)]
         self.right_deployment_locations = [[27-x,y] for x,y in self.left_deployment_locations]
 
+    def isHealthy(self, game_state):
+        dead_firewalls = 0
+        total_firewalls = len(self.destructor_support_locations) + len(self.destructor_locations)
+        for location in self.destructor_support_locations:
+            if not game_state.contains_stationary_unit(location):
+                dead_firewalls += 1
+        for location in self.destructor_locations:
+            if not game_state.contains_stationary_unit(location):
+                dead_firewalls += 1
+
+        return dead_firewalls/total_firewalls > 0.7
+
+
     def on_game_start(self, config):
         """
         Read in config and perform any initial setup here
