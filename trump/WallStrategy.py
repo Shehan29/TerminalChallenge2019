@@ -2,6 +2,7 @@ import gamelib
 import random
 from gamelib.util import debug_write
 import sys
+import utility
 
 """
 Most of the algo code you write will be in this file unless you create new
@@ -180,6 +181,12 @@ class WallStrategy(gamelib.AlgoCore):
                         min_damage_deploy_location = location
 
         bits = int(game_state.get_resource(game_state.BITS))
+        opponentWall = utility.detectWall(game_state)
+        if opponentWall != 0:
+            if game_state.can_spawn(EMP, (3,10), 1):
+                game_state.attempt_spawn(EMP, (3,10), 1)
+                bits -= 3
+
         ping_duplication = bits
         emp_duplication = bits//3
         # debug_write("-----------")
@@ -251,6 +258,11 @@ class WallStrategy(gamelib.AlgoCore):
                     break
 
         bits = int(game_state.get_resource(game_state.BITS))
+        opponentWall = utility.detectWall()
+        if opponentWall != 0:
+            if game_state.can_spawn(EMP, (2,11), 1):
+                game_state.attempt_spawn(EMP, (2,11), 1)
+                bits -= 3
         ping_duplication = bits
         emp_duplication = bits//3
         # debug_write("-----------")
@@ -267,7 +279,3 @@ class WallStrategy(gamelib.AlgoCore):
             if game_state.can_spawn(PING, min_damage_deploy_location, ping_duplication):
                 game_state.attempt_spawn(PING, min_damage_deploy_location, ping_duplication)
 
-
-if __name__ == "__main__":
-    algo = AlgoStrategy()
-    algo.start()

@@ -1,6 +1,7 @@
 from WallStrategy import WallStrategy
-from ScatterStrategy import ScatterStrategy
+from FunnelStrategy import FunnelStrategy
 import gamelib
+import utility
 
 """
 Most of the algo code you write will be in this file unless you create new
@@ -22,8 +23,7 @@ the actual current map state.
 class AlgoStrategy(gamelib.AlgoCore):
     def __init__(self):
         super().__init__()
-        self.algo_strategy = ScatterStrategy()
-        # self.algo_strategy = WallStrategy()
+        self.algo_strategy = WallStrategy()
 
     def on_game_start(self, config):
         """ 
@@ -40,6 +40,9 @@ class AlgoStrategy(gamelib.AlgoCore):
         unit deployments, and transmitting your intended deployments to the
         game engine.
         """
+        # game_state = gamelib.AdvancedGameState(self.config, turn_state)
+        # if not utility.isWallHealthy(game_state, 12):
+        #     self.algo_strategy = ScatterStrategy()
         self.algo_strategy.on_turn(turn_state)
 
     def strategy(self, game_state):

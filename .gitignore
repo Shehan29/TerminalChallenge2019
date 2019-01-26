@@ -2,3 +2,4 @@ replays/*
 .idea/*
 *__pycache__*
 *errorFile*
+*documentation*

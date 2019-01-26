@@ -20,7 +20,7 @@ board states. Though, we recommended making a copy of the map to preserve
 the actual current map state.
 """
 
-class ScatterStrategy(gamelib.AlgoCore):
+class FunnelStrategy(gamelib.AlgoCore):
     def __init__(self):
         super().__init__()
         random.seed()
@@ -221,7 +221,3 @@ class ScatterStrategy(gamelib.AlgoCore):
         if game_state.can_spawn(SCRAMBLER, min_damage_deploy_location):
             game_state.attempt_spawn(SCRAMBLER, min_damage_deploy_location)
 
-
-if __name__ == "__main__":
-    algo = AlgoStrategy()
-    algo.start()
