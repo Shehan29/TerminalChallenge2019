@@ -35,7 +35,8 @@ class WallStrategy(gamelib.AlgoCore):
 
         self.left_deployment_locations = [[x,13-x] for x in range(14)]
         self.right_deployment_locations = [[27-x,y] for x,y in self.left_deployment_locations]
-        self.center_deployment_locations = [[x, 13] for x in range(28)]
+        self.center_deployment_locations = [[x, self.12] for x in range(1, 27)]
+        self.center_deployment_starting_locations = self.left_deployment_locations + self.right_deployment_locations
 
     def on_game_start(self, config):
         """
@@ -219,36 +220,49 @@ class WallStrategy(gamelib.AlgoCore):
             if game_state.can_place(PING, location):
                 debug_write("can_place")
                 path = game_state.find_path_to_edge(location, game_state.game_map.TOP_RIGHT)
-                damage_on_path = self.get_damage_on_path(game_state, path)
-                if damage_on_path < min_damage:
-                    debug_write("new_damage")
-                    debug_write(damage_on_path)
-                    min_damage = damage_on_path
-                    min_damage_deploy_location = location
-            debug_write("-----------")
-
-        for location in self.right_deployment_locations:
-            if game_state.can_place(PING, location):
-                path = game_state.find_path_to_edge(location, game_state.game_map.TOP_LEFT)
+                debug_write(path)
                 if len(path) > 5:
                     damage_on_path = self.get_damage_on_path(game_state, path)
                     if damage_on_path < min_damage:
+                        debug_write("new_damage")
+                        debug_write(damage_on_path)
+                        min_damage = damage_on_path
+                        min_damage_deploy_location = location
+            debug_write("-----------")
+
+        for location in self.center_deployment_locations:
+            debug_write("-----------")
+            debug_write("(%d, %d)" % (location[0], location[1]))
+            if game_state.can_place(PING, location):
+                debug_write("can_place")
+                path = game_state.find_path_to_edge(location, game_state.game_map.TOP_LEFT)
+                debug_write(path)
+                if len(path) > 5:
+                    damage_on_path = self.get_damage_on_path(game_state, path)
+                    if damage_on_path < min_damage:
+                        debug_write("new_damage")
                         min_damage = damage_on_path
                         min_damage_deploy_location = location
                         left_start = False
+            debug_write("-----------")
 
         if left_start:
-            for location in self.left_deployment_locations:
+            for location in reversed(self.left_deployment_locations):
                 if game_state.can_spawn(PING, location):
                     path = game_state.find_path_to_point(location, min_damage_deploy_location) + path
                     min_damage = self.get_damage_on_path(game_state, path)
                     break
         else:
-            for location in self.right_deployment_locations:
+            for location in reversed(self.right_deployment_locations):
                 if game_state.can_spawn(PING, location):
                     path = game_state.find_path_to_point(location, min_damage_deploy_location) + path
                     min_damage = self.get_damage_on_path(game_state, path)
                     break
+
+        debug_write("---FINAL PATH---")
+        debug_write(path)
+        debug_write(min_damage)
+        debug_write("---FINAL PATH---")
 
         bits = int(game_state.get_resource(game_state.BITS))
         ping_duplication = bits
