@@ -1,6 +1,6 @@
 import gamelib
 import random
-# from gamelib.util import debug_write
+from gamelib.util import debug_write
 import sys
 
 """
@@ -35,7 +35,7 @@ class WallStrategy(gamelib.AlgoCore):
 
         self.left_deployment_locations = [[x,13-x] for x in range(14)]
         self.right_deployment_locations = [[27-x,y] for x,y in self.left_deployment_locations]
-        self.center_deployment_locations = [[x, 13]] for x in range(28)
+        self.center_deployment_locations = [[x, 13] for x in range(28)]
 
     def on_game_start(self, config):
         """
@@ -82,8 +82,8 @@ class WallStrategy(gamelib.AlgoCore):
         """
         Attack!
         """
-        # self.deploy_attackers(game_state)
-        self.deploy_attackers_from_middle(game_state)
+        self.deploy_attackers(game_state)
+        # self.deploy_attackers_from_middle(game_state)
 
     def build_great_wall(self, game_state):
         for location in self.destructor_locations:
@@ -211,14 +211,21 @@ class WallStrategy(gamelib.AlgoCore):
         min_damage_deploy_location = self.center_deployment_locations[0]
         left_start = True
         min_damage = sys.maxsize
+        path = []
 
         for location in self.center_deployment_locations:
+            debug_write("-----------")
+            debug_write("(%d, %d)" % (location[0], location[1]))
             if game_state.can_place(PING, location):
+                debug_write("can_place")
                 path = game_state.find_path_to_edge(location, game_state.game_map.TOP_RIGHT)
                 damage_on_path = self.get_damage_on_path(game_state, path)
                 if damage_on_path < min_damage:
+                    debug_write("new_damage")
+                    debug_write(damage_on_path)
                     min_damage = damage_on_path
                     min_damage_deploy_location = location
+            debug_write("-----------")
 
         for location in self.right_deployment_locations:
             if game_state.can_place(PING, location):

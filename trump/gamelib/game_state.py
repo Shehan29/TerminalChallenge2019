@@ -257,6 +257,11 @@ class GameState:
             self._invalid_unit(unit_type)
             return
 
+        if not self.game_map.in_arena_bounds(location):
+            if self.enable_warnings:
+                self.warn("Could not spawn {} at location {}. Location invalid.".format(unit_type, location))
+            return False
+
         affordable = self.number_affordable(unit_type) >= num
         stationary = is_stationary(unit_type)
         blocked = self.contains_stationary_unit(location) or (stationary and len(self.game_map[location[0],location[1]]) > 0)
