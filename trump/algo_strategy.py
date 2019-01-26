@@ -1,7 +1,6 @@
 import gamelib
 import random
-from gamelib.util import debug_write
-from functools import reduce
+# from gamelib.util import debug_write
 import sys
 
 """
@@ -26,8 +25,13 @@ class AlgoStrategy(gamelib.AlgoCore):
         super().__init__()
         random.seed()
 
-        self.destructor_locations = {(1, 12), (26, 12), (6, 12), (21, 12), (11, 12), (16, 12)}
-        self.primary_filter_locations = {(1,13), (26,13), (6,13), (21,13), (11,13), (16,13)}
+        # self.destructor_locations = {(1, 12), (26, 12), (6, 12), (21, 12), (11, 12), (16, 12)}
+        # self.primary_filter_locations = {(1,13), (26,13), (6,13), (21,13), (11,13), (16,13)}
+
+        self.destructor_locations = [(0,13), (2, 12), (3, 12), (10, 12), (17, 12), (24, 12), (25, 12), (27,13)]
+        self.primary_filter_locations = [(2, 13), (3, 13), (10, 13), (17, 13), (24, 13), (25, 13)]
+        self.wall_y = 12
+        self.opening = 12
 
         self.left_deployment_locations = [[x,13-x] for x in range(14)]
         self.right_deployment_locations = [[27-x,y] for x,y in self.left_deployment_locations]
@@ -88,13 +92,25 @@ class AlgoStrategy(gamelib.AlgoCore):
             if game_state.can_spawn(FILTER, location):
                 game_state.attempt_spawn(FILTER, location)
 
+        gaps = []
+        for i in range(1,27):
+            if i != self.opening and not game_state.contains_stationary_unit((i, self.wall_y)):
+                gaps.append((i, self.wall_y))
+        random.shuffle(gaps)
+        for location in gaps:
+            if game_state.can_spawn(FILTER, location):
+                game_state.attempt_spawn(FILTER, location)
+
     def reinforce_destructor(self, game_state, location):
         """
         Attempt to support a destructor with another firewall unit
         """
-        new_locations = [(1,0), (-1,0), (0,-1), (0,1)] if location[0] <= 13 else [(-1,0), (1,0), (0,-1), (0,1)]
+        # new_locations = [(1,0), (-1,0), (0,-1), (0,1)] if location[0] <= 13 else [(-1,0), (1,0), (0,-1), (0,1)]
+        destructor_locations = [(-1,0), (0,-1)] if location[0] <= 13 else [(1,0), (0,-1)]
+        filter_locations = [(-1,1), (1,1)]
 
         FIREWALL = DESTRUCTOR if game_state.get_resource(game_state.CORES) >= game_state.type_cost(DESTRUCTOR) else FILTER
+        new_locations = destructor_locations if FIREWALL == DESTRUCTOR else filter_locations
 
         for offset in new_locations:
             new_firewall_location = (location[0] + offset[0], location[1] + offset[1])
@@ -114,16 +130,17 @@ class AlgoStrategy(gamelib.AlgoCore):
         """
         Reinforce damaged destructors in the WALL
         """
-        new_destructors = set()
+        # new_destructors = set()
+        random.shuffle(self.destructor_locations)
         for location in self.destructor_locations:
             destructor = game_state.game_map[location][0]
             if destructor.stability < destructor.max_stability:
                 firewall, new_location = self.reinforce_destructor(game_state, location)
-                if firewall is DESTRUCTOR:
-                    new_destructors.add(new_location)
+                # if firewall is DESTRUCTOR:
+                    # new_destructors.add(new_location)
             if game_state.get_resource(game_state.CORES) < 1:
                 break
-        self.destructor_locations |= new_destructors
+        # self.destructor_locations |= new_destructors
 
     def get_damage_on_path(self, game_state, path):
         total_damage = 0
@@ -154,38 +171,37 @@ class AlgoStrategy(gamelib.AlgoCore):
         for location in self.right_deployment_locations:
             if game_state.can_spawn(PING, location):
                 path = game_state.find_path_to_edge(location, game_state.game_map.TOP_LEFT)
-                damage_on_path = self.get_damage_on_path(game_state, path)
-                if damage_on_path < min_damage:
-                    min_damage = damage_on_path
-                    min_damage_deploy_location = location
+                if len(path) > 5:
+                    damage_on_path = self.get_damage_on_path(game_state, path)
+                    if damage_on_path < min_damage:
+                        min_damage = damage_on_path
+                        min_damage_deploy_location = location
 
-        ping_duplication = int(game_state.get_resource(game_state.BITS))
-        debug_write("-----------")
-        debug_write(min_damage)
-        debug_write(ping_duplication)
-        debug_write("-----------")
-        if min_damage > ping_duplication:
-            if game_state.can_spawn(EMP, min_damage_deploy_location, (ping_duplication-2)//3):
-                game_state.attempt_spawn(EMP, min_damage_deploy_location, (ping_duplication-2)//3)
+        bits = int(game_state.get_resource(game_state.BITS))
+        ping_duplication = bits
+        emp_duplication = bits//3
+        # debug_write("-----------")
+        # debug_write(min_damage)
+        # debug_write(ping_duplication)
+        # debug_write("-----------")
+        if min_damage > (15*ping_duplication - 50):
+            # not worth sending pings (will get destroyed)
+            # send EMPs to hopefully clear
+            if game_state.can_spawn(EMP, (24,10), emp_duplication):
+                game_state.attempt_spawn(EMP, (24,10), emp_duplication)
+            return
         else:
             if game_state.can_spawn(PING, min_damage_deploy_location, ping_duplication):
                 game_state.attempt_spawn(PING, min_damage_deploy_location, ping_duplication)
 
 
         """
-        Send Scrambler from far end, so that it can destory enemy units
+        Send Scrambler from far end, so that it can destroy enemy units
         that have passed the WALL
         """
         if game_state.can_spawn(SCRAMBLER, min_damage_deploy_location):
             game_state.attempt_spawn(SCRAMBLER, min_damage_deploy_location)
 
-        
-    def filter_blocked_locations(self, locations, game_state):
-        filtered = []
-        for location in locations:
-            if not game_state.contains_stationary_unit(location):
-                filtered.append(location)
-        return filtered
 
 if __name__ == "__main__":
     algo = AlgoStrategy()
