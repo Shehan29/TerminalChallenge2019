@@ -376,6 +376,12 @@ class GameState:
         end_points = self.game_map.get_edge_locations(target_edge)
         return self._shortest_path_finder.navigate_multiple_endpoints(start_location, end_points, self)
 
+    def find_path_to_point(self, start_location, end_point):
+        if self.contains_stationary_unit(start_location):
+            self.warn("Attempted to perform pathing from blocked starting location {}".format(start_location))
+            return
+        return self._shortest_path_finder.navigate_multiple_endpoints(start_location, [end_point], self)
+
     def contains_stationary_unit(self, location):
         """Check if a location is blocked
 
